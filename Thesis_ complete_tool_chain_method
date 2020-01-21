@@ -1,0 +1,120 @@
+What did I complete from 13.01.2020 to 21.01.2020 ?
+All the required scripts are updated to MasterThesisScripts in GitHub repo
+---------------------------------------------------------------------------------------------------
+Imported / created traffic signs in Blender 
+- Blender shortcut to move a 3D object to origin. Use Alt + G.
+- Export as .gitF2.0 file
+---------------------------------------------------------------------------------------------------
+Create a new map in Roadrunner 
+-Import traffic signs
+-Assign semantic segmentation class
+-Make sure to have more than one segment , CARLA routeplanner is dependant on this detail
+-After setting up traffic signs make sure to check semantic segmentation view
+-Create a new folder for each export and use a new name for map(non-existing in CARLA as map)
+-Check OpenDrive view for errors
+----------------------------------------------------------------------------------------------------
+Import into CARLA
+Observations and lessons learnt
+- Always import the map into a new folder inside 'Map' directory. Let it auto save!
+- All the routeplanner objects are not visualized or the visualization is depicted in an incomplete manner. This can be inferred as the car moves in right direction when started in Autopilot mode.
+- Vehicle spawn point are initialized on all route planners. Remove uneccasary spawn point to control car autopilot start point.
+- Press play to start simulation. If the rendering is unstable ,--opengl can be passed as a command line arguement in play options and restart in viewport mode. However the quality of rendering was reduced and traffic sign face pixels were smeared with just one or two colors. 
+- Start an episode of data collection from ROS side , mark the timing to track the folder name holding sensor data
+- Before stopping note down the details of dataset namely 
+	-Kind of tolology
+	-Simulation time duration
+	-Real time duration
+	-Type of Car
+	-FPS 
+- After the episode ALWAYS STOP UNREAL FIRST ! , afer this stop ROS by pressing CTRL+C
+-------------------------------------------------------------------------------------------------------
+---------
+Structure
+---------
+The folder structure is as follows inside dataset folder
+Input and script files
+- Create a new folder named annotations
+- Move the bb_csv_gen.py script from 03_Scripts to annotations 
+
+------
+Method
+------
+Image processing to extract bounding boxes 
+Inside the bb_csv_gen.py python script
+- Rename the folder containing  ground truth folder
+- Rename the csv file to be written as label.csv
+- Execute the script (on all ground truth images)
+- Note down number of images processed
+- Note down the time for processing
+- Remove the images without the bounding box using (non_object_image_file_remover.py)
+- Open label.csv as an excel file. Run the following VB script to select every 3rd row
+
+Sub SelectEveryThirdRow()
+Dim MyRange As Range
+Dim RowSelect As Range
+Dim i As Integer
+Set MyRange = Selection
+Set RowSelect = MyRange.Rows(3)
+For i = 3 To MyRange.Rows.Count Step 3
+Set RowSelect = Union(RowSelect, MyRange.Rows(i))
+Next i
+Application.Goto RowSelect
+End Sub
+
+- Move these labels to test.csv 
+- Delete the blank rows using following instructions in following link
+
+Then delete empty rows using steps in following link
+https://www.excel-easy.com/examples/delete-blank-rows.html 
+Date : 20/01/2020
+
+- Save the cleaned up files as train.csv
+- Edit the (non_object_image_file_remover.py) script to seperate ground truth images into train and test
+
+Inside the bb_csv_gen.py python script
+- Rename the folder containing  ground truth folder to train folder
+- Rename the csv file to be written as train_label.csv
+- Execute the script (on all train ground truth images) to generate train_label.csv
+
+Inside the bb_csv_gen.py python script
+- Rename the folder containing  ground truth folder to test folder
+- Rename the csv file to be written as test_label.csv
+- Execute the script (on all train ground truth images) to generate test_label.csv
+
+-------------------------------------------------------------------------------------------------------
+Training and testing neural network with data inside ./models/images
+---------
+Structure
+---------
+The folder structure is as follows inside tensorflow folder
+./models/annotations - label map, test_labels.csv, train_labels.csv
+./models/checkpoint - Holds the pre trained check point from object detection model zoo
+./models/tf_records - Holds train and test tf_records, python and bash script to generate tf record
+./models/images - Holds all training and testing images
+./models/ssd_mobilenet_v2_coco.config - configuration to load graph and labels
+./models/eval - Holds pipeline config and tf events of testing process
+./models/training_bash_script - To load tensorflow environment and start training
+./models/testing_bash_script - To load tensorflow environment and start testing
+------
+Method
+------
+- Run the script ./record_generate_bash_script to generate tf_records
+
+-- Edit the training configuration
+-- Since we’re only trying to detect traffic_signals, change num_classes to 1
+-- fine_tune_checkpoint tells the model which checkpoint file to use. Set this to checkpoints/model.ckpt
+-- The model also needs to know where the TFRecord files and label maps are for both training and validation sets. Since our train.record and val.record are saved in tf_record folder, our config should reflect that
+
+-Start training in ../tensorflow/models folder using following script
+-- training_bash_script
+-- testing_bash_script
+
+
+--------------------------------------------------------------------------------------------------------
+Discussion and Interpretation of results
+- Data to be found in tex file
+
+
+
+
+
