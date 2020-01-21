@@ -10,9 +10,9 @@ import numpy as np
 import random as rng
 import time
 import csv
+import glob
 
 # import argparse
-
 # Global variables
 start_time = time.time()
 bb_param_array_final_list_of_list = []
@@ -31,9 +31,15 @@ mtype = 'object'
 
 
 def calculate_bb(ground_truth_image, time_stamp):
+    #print(ground_truth_image.shape)
+    #print(os.getcwd())
     image_to_be_processed = ground_truth_image  # Input image
+    #logger.debug(VisualRecord(("Input Image = %d" % (s)),
+    #    [ground_truth_image], fmt = "png"))
+    #print("running logger")
     image_to_be_processed = cv2.cvtColor(image_to_be_processed, cv2.COLOR_RGBA2RGB)
-    # cv2.imwrite('input' + str(time_stamp) + '.png', image_to_be_processed)
+    if image_to_be_processed == None: 
+            raise Exception("could not load input image !")
     # Color based segmentation for yellow color
     lower_boundary_yellow_color = (0, 200, 200)
     upper_boundary_yellow_color = (0, 240, 240)
@@ -52,7 +58,7 @@ def calculate_bb(ground_truth_image, time_stamp):
     edge_segmented_image = cv2.Canny(gray_masked_image, 150, 170)
     #cv2.imwrite('edge' + str(time_stamp) + '.png', edge_segmented_image)
     # Find contours : using RETR_EXTERNAL to fetch only external boundary
-    contours, _ = cv2.findContours(edge_segmented_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, _ = cv2.findContours(edge_segmented_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     # Find the convex hull object for each contour
     hull_list = []
     for i in range(len(contours)):
@@ -76,7 +82,8 @@ def calculate_bb(ground_truth_image, time_stamp):
 
 
 def save_bb_in_csv(bb_param_lst_img):
-    os.chdir('/home/adeshpand/Dokumente/Datasets/02_SYNTHETIC_FINAL/01_STRAIGHT/gt_images/train_gt')
+    os.chdir('/home/adeshpand/Dokumente/tensorflow/models/annotations')
+    #print(os.getcwd())
     with open('train_labels.csv', mode='w') as label_file:
         label_writer = csv.writer(label_file)  # , delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         label_writer.writerow(["filename","width","height","class","xmin","ymin","xmax","ymax"])
@@ -85,21 +92,16 @@ def save_bb_in_csv(bb_param_lst_img):
 
 
 if __name__ == '__main__':
-    
-    
-
-
-    # rospy.init_node('traffic_sign_bb_gen', anonymous=True)
-    # Subscribe to the topic
     # parse arguments from OS
     # parser = argparse.ArgumentParser(description="Convert ground truth semantic segmentation images into csv")
     # parser.add_argument('-d', '--directory', type=str, required=True, help='Directory containing the images')
     # args = parser.parse_args()
-    gt_dir = '/home/adeshpand/Dokumente/Datasets/02_SYNTHETIC_FINAL/01_STRAIGHT/gt_images/train_gt/'
-    # gt_dir = './gt_test/'
+    gt_dir = '../gt_images/train_gt/'
+    print(os.getcwd())
 
-    for img_key in os.listdir(gt_dir):
-        # Read input image
+    for img_key  in os.listdir(gt_dir):
+        #Read input image
+        print(str(gt_dir+ str(img_key)))
         image_gt = cv2.imread(gt_dir + img_key)
         if image_gt == None: 
             raise Exception("could not load image !")
@@ -158,12 +160,11 @@ if __name__ == '__main__':
             # bb_param_lst_all_images.append(bb_param_array_final)
         except:
             no_of_images_not_processed = no_of_images_not_processed + 1
-
             pass
     #print('final bounding box parameters of all images', bb_param_array_final_list_of_list)
     print('Number of images not processed = ', no_of_images_not_processed)
     print('Number of image processed =', no_of_image_processed)
-    print('Number of images present in directory', len(os.listdir(gt_dir)))
+    #print('Number of images present in directory', len(os.listdir(gt_dir)))
     save_bb_in_csv(bb_param_array_final_list_of_list)
     # Calculate total execution time
     print("--- %s seconds ---" % (time.time() - start_time))
