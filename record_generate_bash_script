@@ -1,0 +1,4 @@
+#!/bin/bash
+source /home/adeshpand/Dokumente/tensorflow/tensorflow_v1/python/tensorflow_v1/bin/activate
+export PYTHONPATH=$PYTHONPATH:/home/adeshpand/Dokumente/tensorflow/models/research/slim:/home/adeshpand/Dokumente/tensorflow/models:/home/adeshpand/Dokumente/tensorflow/models/research:/home/rosuser/Documents/tensorflow/models/research/slim/nets
+python generate_tfrecord.py --csv_input=../annotations/train_labels.csv --image_dir=../images/train --output_path=train.record

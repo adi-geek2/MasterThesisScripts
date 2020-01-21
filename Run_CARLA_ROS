@@ -1,0 +1,37 @@
+#!/bin/bash
+#Go to location of CARLA
+cd /home/adi/carla
+#Launch CARLa
+make launch
+# Get its PID
+PID_CARLA=$!
+#print PID
+echo $PID_CARLA
+# Wait for 90 seconds
+echo sleeping
+sleep 90
+echo waking
+# Kill it
+echo killing
+kill -INT $PID_CARLA
+echo sleeping 2
+sleep 90
+echo waking 2
+# Kill it
+echo killing 2
+kill -INT $PID_CARLA
+
+#cd /home/adi/carla-ros-bridge/ros-bridge
+# Launch script in background
+#./ROS_bridge_launch & 
+# Get its PID
+#PID=$!
+# Wait for 30 seconds
+#sleep 30
+# Kill it
+#kill $PID
+# Wait for 30 seconds
+#sleep 30
+# Kill it
+#kill $PID
+
