@@ -54,21 +54,21 @@ def calculate_bb(ground_truth_image, time_stamp):
     # Convert to gray
     gray_masked_image = cv2.cvtColor(masked_image, cv2.COLOR_BGR2GRAY)
     #cv2.imwrite('gray' + str(time_stamp) + '.png', gray_masked_image)
-    # Find edges
+    # Find edges with minVal=150 and maxVal=170 with Hysterisis thresholding    
     edge_segmented_image = cv2.Canny(gray_masked_image, 150, 170)
     #cv2.imwrite('edge' + str(time_stamp) + '.png', edge_segmented_image)
-    # Find contours : using RETR_EXTERNAL to fetch only external boundary
+    # Find contours : using RETR_EXTERNAL to fetch only external boundary and saves them to the vectors contour and hierarchy.
     _, contours, _ = cv2.findContours(edge_segmented_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     # Find the convex hull object for each contour
-    hull_list = []
-    for i in range(len(contours)):
-        hull = cv2.convexHull(contours[i])
-        hull_list.append(hull)
+    #hull_list = []
+    #for i in range(len(contours)):
+    #    hull = cv2.convexHull(contours[i])
+    #    hull_list.append(hull)
     contours_poly = [None] * len(contours)
     boundRect = [None] * len(contours)
     # print(type(boundRect))
-    # centers = [None] * len(contours)
-    # radius = [None] * len(contours)
+    centers = [None] * len(contours)
+    radius = [None] * len(contours)
     for i, c in enumerate(contours):
         contours_poly[i] = cv2.approxPolyDP(c, 3, True)
         boundRect[i] = cv2.boundingRect(contours_poly[i])
@@ -82,7 +82,7 @@ def calculate_bb(ground_truth_image, time_stamp):
 
 
 def save_bb_in_csv(bb_param_lst_img):
-    os.chdir('/home/adeshpand/Dokumente/tensorflow/models/annotations')
+    #os.chdir('/home/adeshpand/Dokumente/tensorflow/models/annotations')
     #print(os.getcwd())
     with open('train_labels.csv', mode='w') as label_file:
         label_writer = csv.writer(label_file)  # , delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     # parser = argparse.ArgumentParser(description="Convert ground truth semantic segmentation images into csv")
     # parser.add_argument('-d', '--directory', type=str, required=True, help='Directory containing the images')
     # args = parser.parse_args()
-    gt_dir = '../gt_images/train_gt/'
+    gt_dir = '/home/adeshpand/Dokumente/05_ground_truth_test_images/'
     print(os.getcwd())
 
     for img_key  in os.listdir(gt_dir):
@@ -109,6 +109,7 @@ if __name__ == '__main__':
         # os.chdir('./gt')
         # Initializing array to hold the bb params
         bb_param_array_final = np.ones((1, 8), dtype=mtype)
+        #print(bb_param_array_final)
         bb_param_array_final_list = []
         # print(bb_param_array_final.shape)
         # Iterator for placing timestamps
@@ -134,24 +135,31 @@ if __name__ == '__main__':
             #print('tuple returned from bbox calc module = ', bb_param_tuple)
             # print(bb_param_tuple[row_index])
             bb_param_tuple_coverted_to_array = np.array(bb_param_tuple)
-            #print('bounding box array = ', bb_param_tuple_coverted_to_array)
-            # print(bb_param_tuple_array)
+            #print('bb_param_tuple_converted_to_array = ', bb_param_tuple_coverted_to_array)
+            #print(bb_param_tuple_array)
             bb_param_array_final_list.append(width)
             bb_param_array_final_list.append(height)
             bb_param_array_final_list.append(class_)
-            bb_param_array_final[0][0] = bb_param_tuple_coverted_to_array[0][0]
+            # Get the number of bounding boxes as input for deciding index of rlevant bounding box
+            number_of_elements_in_bounding_box =  4
+            number_of_bounding_boxes = bb_param_tuple_coverted_to_array.size/number_of_elements_in_bounding_box
+            #print('Number of bounding boxes = ', (bb_param_tuple_coverted_to_array.size/number_of_elements_bounding_box))
+            #The relevant bounding box is the right bottom most one at the end
+            index_relevant_bounding_box =  number_of_bounding_boxes - 1
+            print(index_relevant_bounding_box)
+            bb_param_array_final[0][0] = bb_param_tuple_coverted_to_array[index_relevant_bounding_box][0]
             bb_param_array_final_list.append(bb_param_array_final[0][0])
-            bb_param_array_final[0][1] = bb_param_tuple_coverted_to_array[0][1]
+            bb_param_array_final[0][1] = bb_param_tuple_coverted_to_array[index_relevant_bounding_box][1]
             bb_param_array_final_list.append(bb_param_array_final[0][1])
             #Calculate co-ordinates of bottom and right terminal pixels of  bounding box
-            bb_param_array_final[0][2] = bb_param_tuple_coverted_to_array[0][2]
+            bb_param_array_final[0][2] = bb_param_tuple_coverted_to_array[index_relevant_bounding_box][2]
             xmax = bb_param_array_final[0][0] + bb_param_array_final[0][2]
             bb_param_array_final_list.append(xmax)
-            bb_param_array_final[0][3] = bb_param_tuple_coverted_to_array[0][3]
+            bb_param_array_final[0][3] = bb_param_tuple_coverted_to_array[index_relevant_bounding_box][3]
             ymax = bb_param_array_final[0][1] + bb_param_array_final[0][3]
             bb_param_array_final_list.append(ymax)
             no_of_image_processed = no_of_image_processed + 1
-            # print(bb_param_array_final_list)
+            print(bb_param_array_final_list)
             # bb_param_array_final_list_of_list.append(bb_param_array_final_list)
             bb_param_array_final_list_of_list.append(bb_param_array_final_list)
             # bb_param_array_final_list.append()
